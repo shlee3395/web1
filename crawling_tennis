@@ -1,0 +1,53 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+options = webdriver.ChromeOptions()
+driver = webdriver.Chrome('./chromedriver', options=options)
+driver.implicitly_wait(10)
+
+
+driver.get('https://www.tennis-warehouse.com')
+
+brand_links = driver.find_elements_by_css_selector('a.lnav_highlight')
+
+brand_links_to_crawl = []
+
+for link in brand_links:
+    brand_url = link.get_attribute('href')
+    brand_text = link.text
+    brand_links_to_crawl.append(
+        {"brand_name": brand_text, "brand_url": brand_url})
+
+item_links_to_crawl = []
+
+for brand_link in brand_links_to_crawl:
+    driver.get(brand_link["brand_url"])
+    item_links = driver.find_elements_by_css_selector('a.review')
+    brand_name = brand_link["brand_name"]
+
+    for item_link in item_links:
+        item_url = item_link.get_attribute('href')
+        item_links_to_crawl.append(
+            {"brand_name": brand_name, "item_url": item_url})
+     
+items_list = []
+
+for item in item_links_to_crawl:
+    driver.get(item["item_url"])
+    try:
+        brand_name = item["brand_name"]
+        item_name = driver.find_element_by_css_selector('b').text
+        
+        item_score = driver.find_element_by_css_selector('h2.sub_header.overall').text
+        item_score = float(item_score[17:])
+        
+        item_price = driver.find_element_by_css_selector('span.price').text
+        item_price = item_price[-7:]
+        
+        items_list.append(
+            {"Brand": brand_name, "Product": item_name, "Score": item_score, "Price": item_price})
+    except:
+        pass
+
+for item_final in items_list:
+    print(item_final)
